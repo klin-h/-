@@ -206,38 +206,6 @@ test_questions = [
    - 英文场景：[根据实际测试结果填写]
    - 推理任务：[根据实际测试结果填写]
 
-### 使用建议
-
-1. **选择标准**：
-   - 如果注重响应速度：选择响应时间最短的模型
-   - 如果注重准确性：选择综合评分最高的模型
-   - 如果注重中文理解：选择中文测试表现最佳的模型
-
-2. **部署建议**：
-   - 生产环境建议使用成功率最高的模型
-   - 开发测试可以使用响应最快的模型
-   - 特定场景可以根据专项测试结果选择
-
-## 项目文件结构
-
-```
-hw4/
-├── README.md                 # 项目说明文档
-├── notebooks/
-│   ├── model_deployment.ipynb   # 模型部署代码
-│   ├── testing_framework.ipynb # 测试框架代码
-│   └── results_analysis.ipynb  # 结果分析代码
-├── results/
-│   ├── test_results.csv         # 测试结果数据
-│   ├── evaluation_matrix.csv    # 评估矩阵
-│   └── performance_charts/      # 性能对比图表
-├── data/
-│   └── test_questions.json      # 测试问题集
-└── utils/
-    ├── model_utils.py          # 模型工具函数
-    └── analysis_utils.py       # 分析工具函数
-```
-
 
 
 ## 参考资源
