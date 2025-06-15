@@ -76,7 +76,71 @@ response = tokenizer.decode(outputs[0], skip_special_tokens=True)
 print(response)
 ```
 
-#### 2.2 智谱ChatGLM3-6B
+#### 2.2 ChatGLM3-6B 本地部署
+# 🧱 环境准备
+
+### ✅ 1. 创建 Conda 虚拟环境
+
+```bash
+conda create -n glm_env python=3.10 -y
+conda activate glm_env
+```
+
+### ✅ 2. 安装 PyTorch + torchvision （CPU 版本，2.6.0 + 0.17.0）
+
+```bash
+pip install torch==2.6.0 torchvision==0.17.0 --index-url https://download.pytorch.org/whl/cpu
+```
+
+---
+
+## 📦 安装依赖
+
+```bash
+pip install transformers==4.33.3
+pip install sentencepiece accelerate tqdm
+pip install modelscope
+```
+
+> 说明：`transformers==4.33.3` 是 ChatGLM3 官方测试高符版本，`modelscope` 用于模型自动下载
+
+---
+
+## ⬇️ 下载 ChatGLM3-6B 模型
+
+> 可使用 git clone 下载代码，也可以使用 `snapshot_download()` 自动下载模型到本地
+
+```bash
+git clone https://www.modelscope.cn/ZhipuAI/chatglm3-6b.git
+cd chatglm3-6b
+```
+
+---
+
+## 🚀 启动模型 (CPU)
+
+保存为 `run.py`：
+
+```python
+from modelscope import AutoTokenizer, AutoModel, snapshot_download
+
+model_dir = snapshot_download("ZhipuAI/chatglm3-6b", revision="v1.0.0")
+tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+model = AutoModel.from_pretrained(model_dir, trust_remote_code=True).float().eval()  # CPU 上运行
+
+response, history = model.chat(tokenizer, "你好", history=[])
+print("Bot:", response)
+
+response, history = model.chat(tokenizer, "晚上睡不着怎么办？", history=history)
+print("Bot:", response)
+```
+
+执行：
+```bash
+python run.py
+```
+
+---
 
 ```python
 from modelscope import AutoTokenizer, AutoModel, snapshot_download
