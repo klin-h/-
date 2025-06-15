@@ -147,44 +147,8 @@ python run_chatglm3.py
 ---
 
 
-#### 2.3 百川2-7B-对话模型
 
-```python
-# 下载并加载百川2-7B-Chat模型
-model_name_baichuan = "baichuan-inc/Baichuan2-7B-Chat"
-tokenizer_baichuan = AutoTokenizer.from_pretrained(model_name_baichuan, trust_remote_code=True)
-model_baichuan = AutoModelForCausalLM.from_pretrained(
-    model_name_baichuan,
-    trust_remote_code=True,
-    torch_dtype=torch.float16,
-    device_map="auto"
-)
-```
-
-### 3. 模型推理函数
-
-```python
-def generate_response(model, tokenizer, prompt, max_length=2048):
-    """
-    通用的模型推理函数
-    """
-    inputs = tokenizer.encode(prompt, return_tensors="pt")
-    
-    with torch.no_grad():
-        outputs = model.generate(
-            inputs,
-            max_length=max_length,
-            do_sample=True,
-            temperature=0.7,
-            top_p=0.9,
-            pad_token_id=tokenizer.eos_token_id
-        )
-    
-    response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return response.replace(prompt, "").strip()
-```
-
-## 测试案例设计
+## 3.1 测试案例设计
 设计了以下测试问题来评估模型的语言理解和推理能力：
 
 ```python
@@ -210,7 +174,7 @@ test_questions = [
 ]
 ```
 
-## 结果分析与对比
+## 4.1结果分析与对比
 
 
 ## 模型能力对比分析
@@ -226,62 +190,6 @@ test_questions = [
 #### 英文理解能力
 - **语法结构**：测试模型对英文复杂句式的理解
 - **语义歧义**：测试模型对同形异义句子的区分能力
-
-### 2. 推理逻辑能力
-
-```python
-def analyze_reasoning_ability(results_df):
-    """
-    分析各模型的推理能力
-    """
-    reasoning_analysis = {}
-    
-    for model in results_df['model'].unique():
-        model_data = results_df[results_df['model'] == model]
-        
-        # 计算各类别的成功率
-        category_success = model_data.groupby('category').apply(
-            lambda x: (x['status'] == 'success').sum() / len(x)
-        )
-        
-        reasoning_analysis[model] = {
-            '语言理解-歧义消解': category_success.get('语言理解-歧义消解', 0),
-            '语言理解-句法分析': category_success.get('语言理解-句法分析', 0),
-            '平均响应时间': model_data['response_time'].mean(),
-            '总体成功率': (model_data['status'] == 'success').sum() / len(model_data)
-        }
-    
-    return reasoning_analysis
-
-reasoning_results = analyze_reasoning_ability(results_df)
-```
-
-### 3. 综合评估矩阵
-
-```python
-def create_evaluation_matrix(reasoning_results):
-    """
-    创建综合评估矩阵
-    """
-    eval_df = pd.DataFrame(reasoning_results).T
-    
-    # 添加综合评分（基于多个指标的加权平均）
-    eval_df['综合评分'] = (
-        eval_df['语言理解-歧义消解'] * 0.3 +
-        eval_df['语言理解-句法分析'] * 0.3 +
-        eval_df['总体成功率'] * 0.4
-    ) * 100
-    
-    # 响应时间评分（时间越短分数越高）
-    max_time = eval_df['平均响应时间'].max()
-    eval_df['响应速度评分'] = (max_time - eval_df['平均响应时间']) / max_time * 100
-    
-    return eval_df.round(2)
-
-evaluation_matrix = create_evaluation_matrix(reasoning_results)
-print("=== 综合评估矩阵 ===")
-print(evaluation_matrix)
-```
 
 ## 结论与建议
 
