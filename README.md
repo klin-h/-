@@ -43,32 +43,73 @@
 #### 2.1 通义千问Qwen-7B-Chat
 
 ```python
-from modelscope import AutoModelForCausalLM, AutoTokenizer
-import torch
+from transformers import TextStreamer, AutoTokenizer, AutoModelForCausalLM
 
-# 下载并加载Qwen-7B-Chat模型
-model_name_qwen = "qwen/Qwen-7B-Chat"
-tokenizer_qwen = AutoTokenizer.from_pretrained(model_name_qwen, trust_remote_code=True)
-model_qwen = AutoModelForCausalLM.from_pretrained(
-    model_name_qwen, 
-    trust_remote_code=True,
-    torch_dtype=torch.float16,
-    device_map="auto"
+# 模型本地路径
+model_name = "/mnt/data/Qwen-7B-Chat"
+
+# 输入提示
+prompt = "What's the difference between these two sentences?\n"
+    "1. He said she said he wouldn't say.\n"
+    "2. She said he said she wouldn't say."
+
+# 加载分词器
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name,
+    trust_remote_code=True
 )
+
+# 加载模型并设为评估模式
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    trust_remote_code=True,
+    torch_dtype="auto"  # 自动选择 float32 或 float16，依据模型配置
+).eval()
+
+# 编码输入
+inputs = tokenizer(prompt, return_tensors="pt").input_ids
+)
+# 推理生成
+outputs = model.generate(inputs, max_new_tokens=100)
+response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+print(response)
 ```
 
 #### 2.2 智谱ChatGLM3-6B
 
 ```python
-# 下载并加载ChatGLM3-6B模型
-model_name_glm = "ZhipuAI/chatglm3-6b"
-tokenizer_glm = AutoTokenizer.from_pretrained(model_name_glm, trust_remote_code=True)
-model_glm = AutoModelForCausalLM.from_pretrained(
-    model_name_glm,
-    trust_remote_code=True,
-    torch_dtype=torch.float16,
-    device_map="auto"
+from modelscope import AutoTokenizer, AutoModel, snapshot_download
+
+# 下载模型（首次使用时执行，模型会缓存至 ~/.cache/modelscope/hub/）
+model_dir = snapshot_download("ZhipuAI/chatglm3-6b", revision="v1.0.0")
+
+# 加载 tokenizer
+tokenizer = AutoTokenizer.from_pretrained(
+    model_dir,
+    trust_remote_code=True
 )
+
+# 加载模型并转换为 float32（避免在 CPU 上使用 half 精度导致报错）
+model = AutoModel.from_pretrained(
+    model_dir,
+    trust_remote_code=True
+).float()
+
+# 设置模型为推理模式
+model = model.eval()
+
+# 单轮对话测试
+response, history = model.chat(
+    tokenizer,
+    "What's the difference between these two sentences?\n"
+    "1. He said she said he wouldn't say.\n"
+    "2. She said he said she wouldn't say.",
+    history=[]
+)
+
+# 输出结果
+print(response)
 ```
 
 #### 2.3 百川2-7B-对话模型
@@ -140,59 +181,8 @@ test_questions = [
 ### 测试执行代码
 
 ```python
-import pandas as pd
-import time
 
-def run_comprehensive_test():
-    """
-    运行综合测试并收集结果
-    """
-    results = []
-    
-    models = [
-        ("Qwen-7B-Chat", model_qwen, tokenizer_qwen),
-        ("ChatGLM3-6B", model_glm, tokenizer_glm),
-        ("Baichuan2-7B-Chat", model_baichuan, tokenizer_baichuan)
-    ]
-    
-    for model_name, model, tokenizer in models:
-        print(f"\n正在测试 {model_name}...")
-        
-        for test_case in test_questions:
-            print(f"  问题 {test_case['id']}: {test_case['category']}")
-            
-            start_time = time.time()
-            try:
-                response = generate_response(model, tokenizer, test_case['question'])
-                response_time = time.time() - start_time
-                
-                results.append({
-                    'model': model_name,
-                    'question_id': test_case['id'],
-                    'category': test_case['category'],
-                    'language': test_case['language'],
-                    'question': test_case['question'],
-                    'response': response,
-                    'response_time': response_time,
-                    'status': 'success'
-                })
-                
-            except Exception as e:
-                results.append({
-                    'model': model_name,
-                    'question_id': test_case['id'],
-                    'category': test_case['category'],
-                    'language': test_case['language'],
-                    'question': test_case['question'],
-                    'response': f"错误: {str(e)}",
-                    'response_time': 0,
-                    'status': 'error'
-                })
-    
-    return pd.DataFrame(results)
-
-# 执行测试
-results_df = run_comprehensive_test()
+   
 ```
 
 ## 结果分析与对比
@@ -374,41 +364,7 @@ hw4/
     └── analysis_utils.py       # 分析工具函数
 ```
 
-## 运行环境要求
 
-- **Python**: 3.8+
-- **PyTorch**: 1.9+
-- **ModelScope**: 最新版本
-- **内存**: 建议16GB+
-- **存储**: 建议50GB+（用于模型存储）
-- **网络**: 稳定的网络连接（用于模型下载）
-
-## 常见问题解决
-
-### 1. 模型下载失败
-```bash
-# 设置ModelScope缓存目录
-export MODELSCOPE_CACHE='/path/to/your/cache'
-
-# 或在Python中设置
-import os
-os.environ['MODELSCOPE_CACHE'] = '/path/to/your/cache'
-```
-
-### 2. 内存不足
-```python
-# 使用较小的batch size
-# 启用梯度检查点
-# 使用混合精度训练
-```
-
-### 3. 网络连接问题
-```python
-# 使用镜像源
-from modelscope.hub.api import HubApi
-api = HubApi()
-api.set_hub_url('https://modelscope.cn')
-```
 
 ## 参考资源
 
@@ -417,13 +373,5 @@ api.set_hub_url('https://modelscope.cn')
 - [ChatGLM3官方文档](https://github.com/THUDM/ChatGLM3)
 - [百川2官方文档](https://github.com/baichuan-inc/Baichuan2)
 
-## 项目维护
-
-- **作者**: [Your Name]
-- **创建时间**: 2024年
-- **最后更新**: 2024年
-- **联系方式**: [Your Contact]
-
----
 
 **注意**: 本项目仅用于学习和研究目的，请遵守各模型的使用协议和相关法律法规。 # -
