@@ -22,14 +22,7 @@
 1. 在魔搭平台主页，点击"创建空间"
 2.  点击"创建"并等待环境启动
 
-### 3. 创建 Conda 虚拟环境
-
-```bash
-conda create -n glm_env python=3.10 -y
-conda activate glm_env
-```
-
-## Qwen-7B-Chat 部署流程
+## 2.1 Qwen-7B-Chat 部署流程
 > 模型来源：Qwen 团队 / ModelScope\
 > 项目主页：[https://www.modelscope.cn/qwen/Qwen-7B-Chat](https://www.modelscope.cn/qwen/Qwen-7B-Chat)
 
@@ -102,107 +95,44 @@ outputs = model.generate(inputs, streamer=streamer, max_new_tokens=300)
 python run_qwen_cpu.py
 ```
 
-### 1. 环境配置
+## 2.2 ChatGLM3-6B 本地部署
 
-在Jupyter Notebook中执行以下代码安装必要依赖：
-
-```python
-# 安装ModelScope SDK
-!pip install modelscope
-
-# 安装其他必要依赖
-!pip install torch transformers tokenizers
-!pip install pandas numpy matplotlib seaborn
-!pip install jupyter notebook
-```
-
-### 2. 模型下载与加载
-
-#### 2.1 通义千问Qwen-7B-Chat
-
-```python
-from transformers import TextStreamer, AutoTokenizer, AutoModelForCausalLM
-
-# 模型本地路径
-model_name = "/mnt/data/Qwen-7B-Chat"
-
-# 输入提示
-prompt = "What's the difference between these two sentences?\n"
-    "1. He said she said he wouldn't say.\n"
-    "2. She said he said she wouldn't say."
-
-# 加载分词器
-tokenizer = AutoTokenizer.from_pretrained(
-    model_name,
-    trust_remote_code=True
-)
-
-# 加载模型并设为评估模式
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    trust_remote_code=True,
-    torch_dtype="auto"  # 自动选择 float32 或 float16，依据模型配置
-).eval()
-
-# 编码输入
-inputs = tokenizer(prompt, return_tensors="pt").input_ids
-)
-# 推理生成
-outputs = model.generate(inputs, max_new_tokens=100)
-response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-print(response)
-```
-
-### 2.2 ChatGLM3-6B 本地部署
-#### 环境准备
+### 1. 创建 Conda 虚拟环境
 
 ```bash
 conda create -n glm_env python=3.10 -y
 conda activate glm_env
 ```
 
-#### 2. 安装 PyTorch + torchvision （CPU 版本，2.6.0 + 0.17.0）
+### 2. 安装 PyTorch + torchvision（CPU）
 
 ```bash
 pip install torch==2.6.0 torchvision==0.17.0 --index-url https://download.pytorch.org/whl/cpu
 ```
-
----
-
-#### 安装依赖
+### 3. 安装依赖
 
 ```bash
 pip install transformers==4.33.3
 pip install sentencepiece accelerate tqdm
 pip install modelscope
 ```
-
-> 说明：`transformers==4.33.3` 是 ChatGLM3 官方测试高符版本，`modelscope` 用于模型自动下载
-
----
-
-#### 下载 ChatGLM3-6B 模型
-
-> 可使用 git clone 下载代码，也可以使用 `snapshot_download()` 自动下载模型到本地
+### 4.下载模型代码
 
 ```bash
 git clone https://www.modelscope.cn/ZhipuAI/chatglm3-6b.git
 cd chatglm3-6b
 ```
 
----
+### 5.推理测试脚本
 
-#### 启动模型 (CPU)
-
-保存为 `run.py`：
+保存为 `run_chatglm3.py`
 
 ```python
 from modelscope import AutoTokenizer, AutoModel, snapshot_download
 
 model_dir = snapshot_download("ZhipuAI/chatglm3-6b", revision="v1.0.0")
 tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
-model = AutoModel.from_pretrained(model_dir, trust_remote_code=True).float().eval()  # CPU 上运行
+model = AutoModel.from_pretrained(model_dir, trust_remote_code=True).float().eval()
 
 response, history = model.chat(tokenizer, "你好", history=[])
 print("Bot:", response)
@@ -212,45 +142,13 @@ print("Bot:", response)
 ```
 
 执行：
+
 ```bash
-python run.py
+python run_chatglm3.py
 ```
 
 ---
 
-```python
-from modelscope import AutoTokenizer, AutoModel, snapshot_download
-
-# 下载模型（首次使用时执行，模型会缓存至 ~/.cache/modelscope/hub/）
-model_dir = snapshot_download("ZhipuAI/chatglm3-6b", revision="v1.0.0")
-
-# 加载 tokenizer
-tokenizer = AutoTokenizer.from_pretrained(
-    model_dir,
-    trust_remote_code=True
-)
-
-# 加载模型并转换为 float32（避免在 CPU 上使用 half 精度导致报错）
-model = AutoModel.from_pretrained(
-    model_dir,
-    trust_remote_code=True
-).float()
-
-# 设置模型为推理模式
-model = model.eval()
-
-# 单轮对话测试
-response, history = model.chat(
-    tokenizer,
-    "What's the difference between these two sentences?\n"
-    "1. He said she said he wouldn't say.\n"
-    "2. She said he said she wouldn't say.",
-    history=[]
-)
-
-# 输出结果
-print(response)
-```
 
 #### 2.3 百川2-7B-对话模型
 
