@@ -76,17 +76,15 @@ response = tokenizer.decode(outputs[0], skip_special_tokens=True)
 print(response)
 ```
 
-#### 2.2 ChatGLM3-6B 本地部署
-# 🧱 环境准备
-
-### ✅ 1. 创建 Conda 虚拟环境
+### 2.2 ChatGLM3-6B 本地部署
+#### 环境准备
 
 ```bash
 conda create -n glm_env python=3.10 -y
 conda activate glm_env
 ```
 
-### ✅ 2. 安装 PyTorch + torchvision （CPU 版本，2.6.0 + 0.17.0）
+#### 2. 安装 PyTorch + torchvision （CPU 版本，2.6.0 + 0.17.0）
 
 ```bash
 pip install torch==2.6.0 torchvision==0.17.0 --index-url https://download.pytorch.org/whl/cpu
@@ -94,7 +92,7 @@ pip install torch==2.6.0 torchvision==0.17.0 --index-url https://download.pytorc
 
 ---
 
-## 📦 安装依赖
+#### 安装依赖
 
 ```bash
 pip install transformers==4.33.3
@@ -106,7 +104,7 @@ pip install modelscope
 
 ---
 
-## ⬇️ 下载 ChatGLM3-6B 模型
+#### 下载 ChatGLM3-6B 模型
 
 > 可使用 git clone 下载代码，也可以使用 `snapshot_download()` 自动下载模型到本地
 
@@ -117,7 +115,7 @@ cd chatglm3-6b
 
 ---
 
-## 🚀 启动模型 (CPU)
+#### 启动模型 (CPU)
 
 保存为 `run.py`：
 
