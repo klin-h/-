@@ -22,7 +22,85 @@
 1. 在魔搭平台主页，点击"创建空间"
 2.  点击"创建"并等待环境启动
 
-## 模型部署流程
+### 3. 创建 Conda 虚拟环境
+
+```bash
+conda create -n glm_env python=3.10 -y
+conda activate glm_env
+```
+
+## Qwen-7B-Chat 部署流程
+> 模型来源：Qwen 团队 / ModelScope\
+> 项目主页：[https://www.modelscope.cn/qwen/Qwen-7B-Chat](https://www.modelscope.cn/qwen/Qwen-7B-Chat)
+
+### 1. 安装 Miniconda（如系统没有）
+
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/conda
+export PATH="/opt/conda/bin:$PATH"
+echo 'export PATH="/opt/conda/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+### 2. 创建环境并激活
+
+```bash
+conda create -n qwen_env python=3.10 -y
+source /opt/conda/etc/profile.d/conda.sh
+conda activate qwen_env
+```
+### 3. 安装依赖（CPU）
+
+```bash
+pip install torch==2.3.0+cpu torchvision==0.18.0+cpu --index-url https://download.pytorch.org/whl/cpu
+pip install -U pip setuptools wheel
+pip install \
+  intel-extension-for-transformers==1.4.2 \
+  neural-compressor==2.5 \
+  transformers==4.33.3 \
+  modelscope==1.9.5 \
+  pydantic==1.10.13 \
+  sentencepiece \
+  tiktoken \
+  einops \
+  transformers_stream_generator \
+  uvicorn \
+  fastapi \
+  yacs \
+  setuptools_scm
+pip install fschat --use-pep517
+pip install tqdm huggingface-hub
+```
+### 4.下载模型
+
+```bash
+cd /mnt/data
+git clone https://www.modelscope.cn/qwen/Qwen-7B-Chat.git
+```
+### 推理测试脚本
+
+保存为 `run_qwen_cpu.py`
+
+```python
+from transformers import TextStreamer, AutoTokenizer, AutoModelForCausalLM
+
+model_name = "/mnt/data/Qwen-7B-Chat"
+prompt = "请说出以下两句话区别在哪里？ 1、冬天：能穿多少穿多少 2、夏天：能穿多少穿多少"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True, torch_dtype="auto").eval()
+
+inputs = tokenizer(prompt, return_tensors="pt").input_ids
+streamer = TextStreamer(tokenizer)
+outputs = model.generate(inputs, streamer=streamer, max_new_tokens=300)
+```
+
+执行：
+
+```bash
+python run_qwen_cpu.py
+```
 
 ### 1. 环境配置
 
