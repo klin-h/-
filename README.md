@@ -1,6 +1,6 @@
 # 魔搭平台大语言模型部署与对比测试项目
 
-## 项目概述
+## 1.1 项目概述
 
 本项目旨在通过魔搭平台（ModelScope）部署和对比测试三个主流大语言模型，包括：
 - **通义千问Qwen-7B-Chat**
@@ -9,7 +9,7 @@
 
 通过标准化的测试案例，对这些模型的语言理解能力、对话质量和推理性能进行横向对比分析。
 
-## 环境准备
+## 1.2环境准备
 
 ### 1. 注册并登录魔搭平台
 
@@ -134,12 +134,9 @@ model_dir = snapshot_download("ZhipuAI/chatglm3-6b", revision="v1.0.0")
 tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
 model = AutoModel.from_pretrained(model_dir, trust_remote_code=True).float().eval()
 
-response, history = model.chat(tokenizer, "你好", history=[])
+response, history = model.chat(tokenizer, "请说出以下两句话区别在哪里？ 1、冬天：能穿多少穿多少 2、夏天：能穿多少穿多少", history=[])
 print("Bot:", response)
 
-response, history = model.chat(tokenizer, "晚上睡不着怎么办？", history=history)
-print("Bot:", response)
-```
 
 执行：
 
@@ -188,10 +185,7 @@ def generate_response(model, tokenizer, prompt, max_length=2048):
 ```
 
 ## 测试案例设计
-
-### 测试问题集
-
-我们设计了以下测试问题来评估模型的语言理解和推理能力：
+设计了以下测试问题来评估模型的语言理解和推理能力：
 
 ```python
 test_questions = [
@@ -216,76 +210,8 @@ test_questions = [
 ]
 ```
 
-### 测试执行代码
-
-```python
-
-   
-```
-
 ## 结果分析与对比
 
-### 1. 基础统计分析
-
-```python
-# 显示基本统计信息
-print("=== 测试结果统计 ===")
-print(f"总测试数量: {len(results_df)}")
-print(f"成功测试数量: {len(results_df[results_df['status'] == 'success'])}")
-print(f"失败测试数量: {len(results_df[results_df['status'] == 'error'])}")
-
-# 按模型分组统计
-model_stats = results_df.groupby('model').agg({
-    'response_time': ['mean', 'median', 'std'],
-    'status': lambda x: (x == 'success').sum()
-}).round(3)
-
-print("\n=== 各模型性能统计 ===")
-print(model_stats)
-```
-
-### 2. 响应时间对比
-
-```python
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# 设置中文字体
-plt.rcParams['font.sans-serif'] = ['SimHei']
-plt.rcParams['axes.unicode_minus'] = False
-
-# 响应时间对比图
-plt.figure(figsize=(12, 6))
-sns.boxplot(data=results_df[results_df['status'] == 'success'], 
-            x='model', y='response_time')
-plt.title('各模型响应时间对比')
-plt.ylabel('响应时间 (秒)')
-plt.xlabel('模型')
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.show()
-```
-
-### 3. 详细结果展示
-
-```python
-# 按问题分类展示结果
-for question_id in sorted(results_df['question_id'].unique()):
-    question_data = results_df[results_df['question_id'] == question_id]
-    
-    print(f"\n{'='*80}")
-    print(f"问题 {question_id}: {question_data.iloc[0]['category']}")
-    print(f"{'='*80}")
-    print(f"问题内容: {question_data.iloc[0]['question']}")
-    print(f"\n各模型回答对比:")
-    
-    for _, row in question_data.iterrows():
-        print(f"\n【{row['model']}】")
-        print(f"回答: {row['response']}")
-        print(f"响应时间: {row['response_time']:.2f}秒")
-        print(f"状态: {row['status']}")
-        print("-" * 60)
-```
 
 ## 模型能力对比分析
 
